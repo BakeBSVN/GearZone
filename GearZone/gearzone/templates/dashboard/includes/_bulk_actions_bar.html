@@ -1,0 +1,67 @@
+{% load static %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+{% load i18n %}
+<nav class="data-table-bulk-actions">
+  <div class="data-table-bulk-actions__select-all"></div>
+  <div class="data-table-bulk-actions__selected-items col inline"></div>
+  <div class="data-table-bulk-actions__action-choice">
+    <ul class="right">
+      {% for action, label in bulk_action_form.action.field.widget.choices %}
+        <li>
+          <a href=""
+             data-action="{{ action }}"
+             class="btn-flat waves-effect">{{ label|upper }}</a>
+        </li>
+      {% endfor %}
+        <li>
+          <a id="export-selected" href="#" class="btn-flat waves-effect">
+            {% trans "Export Selected" %}
+          </a>
+        </li>
+    </ul>
+  </div>
+  <div class="data-table-bulk-actions__dropdown-container">
+    <a class="dropdown-button right" href="#!" data-activates="dropdown-bulk-actions" data-constrainwidth="false" data-gutter="-19" data-alignment="right">
+      <svg data-src="{% static "dashboard/images/more-vert.svg" %}" height="24" width="24" />
+    </a>
+    <ul id="dropdown-bulk-actions" class="dropdown-content">
+    {% for action, label in bulk_action_form.action.field.widget.choices %}
+      <li>
+        <a href=""
+           data-action="{{ action }}"
+           class="btn-flat waves-effect">{{ label|upper }}</a>
+      </li>
+    {% endfor %}
+  </ul>
+  </div>
+</nav>
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        $('#select-all-items').on('change', function() {
+            var checked = $(this).prop('checked');
+            $('.select-item').prop('checked', checked);
+        });
+
+        $('.select-item').on('change', function() {
+            var allChecked = $('.select-item:checked').length === $('.select-item').length;
+            $('#select-all-items').prop('checked', allChecked);
+        });
+
+        $('#export-selected').on('click', function(e) {
+            e.preventDefault();
+            var selectedIds = $('.select-item:checked').map(function() {
+                return $(this).val();
+            }).get().filter(function(id) {
+                return !isNaN(id);
+            }).join(',');
+            if (selectedIds) {
+                var exportUrl = "{% url 'dashboard:product-export-selected' %}";
+                window.location.href = exportUrl + "?ids=" + selectedIds;
+            } else {
+                alert("No products selected");
+            }
+        });
+    });
+</script>
+{% endblock %}

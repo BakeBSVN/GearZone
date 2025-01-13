@@ -1,0 +1,22 @@
+{% extends "dashboard/base.html" %}
+{% load i18n %}
+
+{% block content %}
+<h2>{% trans "Manage Slides" %}</h2>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-primary">{% trans "Add Slide" %}</button>
+</form>
+
+<h3>{% trans "Existing Slides" %}</h3>
+<ul>
+    {% for slide in slides %}
+    <li>
+        <img src="{{ slide.image.url }}" alt="{{ slide.title }}" width="100">
+        <p>{{ slide.title }}</p>
+    </li>
+    {% endfor %}
+</ul>
+{% endblock %}

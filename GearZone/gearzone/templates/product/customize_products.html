@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-5">
+    <h1 class="text-center mb-4">Build Your Custom PC</h1>
+    <form>
+        <table class="table table-bordered shadow-sm">
+            <thead class="table-dark text-center">
+                <tr>
+                    <th>#</th>
+                    <th>Component</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+              <tbody>
+                  {% for category in categories %}
+                  <tr>
+                      <td class="text-center align-middle">{{ forloop.counter }}</td>
+                      <td class="align-middle">{{ category.name }}</td>
+                      <td class="text-center">
+                          <button type="button" class="btn btn-warning text-white" onclick="selectProduct('{{ category.id }}', '{{ category.name }}')">
+                              + Select {{ category.name }}
+                          </button>
+                      </td>
+                  </tr>
+                  {% endfor %}
+              </tbody>
+        </table>
+    </form>
+    <div class="text-end mt-4">
+        <h3 class="text-danger fw-bold">Estimated Total: $<span id="total-cost">0.00</span></h3>
+    </div>
+    <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-primary">Add to Cart</button>
+        <button type="button" class="btn btn-secondary">Export CSV</button>
+        <button type="button" class="btn btn-success">Download Configuration</button>
+        <button type="button" class="btn btn-info">Share Configuration</button>
+        <button type="button" class="btn btn-dark">Print</button>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="productModal" tabindex="-1" aria-labelledby="productModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productModalLabel">Select Product</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="product-list" class="row">
+                    <!-- Products will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+ function selectProduct(categoryId, categoryName) {
+    fetch(`/customize-products?category_id=${categoryId}`)
+        .then(response => response.json())
+        .then(data => {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = ''; // Xóa sản phẩm cũ
+            data.products.forEach(product => {
+                const productCard = `
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <img src="${product.image}" class="card-img-top" alt="${product.name}">
+                            <div class="card-body">
+                                <h5 class="card-title">${product.name}</h5>
+                                <p class="card-text">$${product.price}</p>
+                                <button type="button" class="btn btn-primary" onclick="addProductToCart(${product.id})">Add to Cart</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                productList.insertAdjacentHTML('beforeend', productCard);
+            });
+
+            // Hiển thị Modal
+            const productModalLabel = document.getElementById('productModalLabel');
+            productModalLabel.textContent = `Select Product for ${categoryName}`;
+            const productModal = new bootstrap.Modal(document.getElementById('productModal'));
+            productModal.show();
+        });
+}
+
+
+  function addProductToCart(productId) {
+    fetch('/api/add-to-cart/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')  // Ensure CSRF token is included
+        },
+        body: JSON.stringify({ product_id: productId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Product ${productId} added to cart`);
+            updateTotalCost();
+        } else {
+            alert('Failed to add product to cart');
+        }
+    });
+  }
+
+  // Function to get CSRF token from cookies
+  function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                  cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                  break;
+              }
+          }
+      }
+      return cookieValue;
+  }
+
+  function updateTotalCost() {
+      // Replace this with actual logic for updating total cost
+      document.getElementById('total-cost').innerText = "1234.56";
+  }
+</script>
+{% endblock %}
+{#  <!DOCTYPE html>#}
+{#<html lang="en">#}
+{#<head>#}
+{#    <meta charset="UTF-8">#}
+{#    <meta name="viewport" content="width=device-width, initial-scale=1.0">#}
+{#    <title>Keyboard Builder</title>#}
+{#    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">#}
+{#</head>#}
+{#<body>#}
+{#<div class="container mt-5">#}
+{#    <h1 class="text-center mb-4">Build Your Keyboard</h1>#}
+{#    <form id="keyboard-builder">#}
+{#        <div class="mb-3">#}
+{#            <label for="layout" class="form-label">1. Select Layout</label>#}
+{#            <select id="layout" class="form-select">#}
+{#                <option value="" disabled selected>Choose a layout</option>#}
+{#                <option value="60%">60%</option>#}
+{#                <option value="65%">65%</option>#}
+{#                <option value="75%">75%</option>#}
+{#                <option value="TKL">Tenkeyless (TKL)</option>#}
+{#                <option value="Full-size">Full-size</option>#}
+{#            </select>#}
+{#        </div>#}
+{##}
+{#        <div class="mb-3">#}
+{#            <label for="case" class="form-label">2. Select Case</label>#}
+{#            <select id="case" class="form-select">#}
+{#                <option value="" disabled selected>Choose a case</option>#}
+{#                <option value="Plastic Case">Plastic Case</option>#}
+{#                <option value="Aluminum Case">Aluminum Case</option>#}
+{#                <option value="Acrylic Case">Acrylic Case</option>#}
+{#            </select>#}
+{#        </div>#}
+{##}
+{#        <div class="mb-3">#}
+{#            <label for="pcb" class="form-label">3. Select PCB</label>#}
+{#            <select id="pcb" class="form-select">#}
+{#                <option value="" disabled selected>Choose a PCB</option>#}
+{#                <option value="Hot-swap PCB">Hot-swap PCB</option>#}
+{#                <option value="Solder PCB">Solder PCB</option>#}
+{#            </select>#}
+{#        </div>#}
+{##}
+{#        <div class="mb-3">#}
+{#            <label for="switch" class="form-label">4. Select Switch</label>#}
+{#            <select id="switch" class="form-select">#}
+{#                <option value="" disabled selected>Choose a switch</option>#}
+{#                <option value="Linear">Linear</option>#}
+{#                <option value="Tactile">Tactile</option>#}
+{#                <option value="Clicky">Clicky</option>#}
+{#            </select>#}
+{#        </div>#}
+{##}
+{#        <div class="mb-3">#}
+{#            <label for="keycap" class="form-label">5. Select Keycap</label>#}
+{#            <select id="keycap" class="form-select">#}
+{#                <option value="" disabled selected>Choose a keycap</option>#}
+{#                <option value="ABS Keycap">ABS Keycap</option>#}
+{#                <option value="PBT Keycap">PBT Keycap</option>#}
+{#                <option value="Doubleshot Keycap">Doubleshot Keycap</option>#}
+{#            </select>#}
+{#        </div>#}
+{##}
+{#        <button type="button" class="btn btn-primary w-100" onclick="buildKeyboard()">Build Keyboard</button>#}
+{#    </form>#}
+{#    <div id="result" class="mt-4"></div>#}
+{#</div>#}
+{##}
+{#<script>#}
+{#    function buildKeyboard() {#}
+{#        const layout = document.getElementById('layout').value;#}
+{#        const caseType = document.getElementById('case').value;#}
+{#        const pcb = document.getElementById('pcb').value;#}
+{#        const switchType = document.getElementById('switch').value;#}
+{#        const keycap = document.getElementById('keycap').value;#}
+{##}
+{#        // Kiểm tra nếu chưa chọn đủ thành phần#}
+{#        if (!layout || !caseType || !pcb || !switchType || !keycap) {#}
+{#            document.getElementById('result').innerHTML = `#}
+{#                <div class="alert alert-danger">Please select all components to build your keyboard.</div>`;#}
+{#            return;#}
+{#        }#}
+{##}
+{#        // Hiển thị kết quả#}
+{#        document.getElementById('result').innerHTML = `#}
+{#            <div class="alert alert-success">#}
+{#                <h4>Your Keyboard Build:</h4>#}
+{#                <ul>#}
+{#                    <li><strong>Layout:</strong> ${layout}</li>#}
+{#                    <li><strong>Case:</strong> ${caseType}</li>#}
+{#                    <li><strong>PCB:</strong> ${pcb}</li>#}
+{#                    <li><strong>Switch:</strong> ${switchType}</li>#}
+{#                    <li><strong>Keycap:</strong> ${keycap}</li>#}
+{#                </ul>#}
+{#                <p>Congratulations! You have successfully built your custom keyboard.</p>#}
+{#            </div>`;#}
+{#    }#}
+{#</script>#}
+{#</body>#}
+{#</html>#}

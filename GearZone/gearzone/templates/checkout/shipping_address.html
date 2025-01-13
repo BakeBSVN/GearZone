@@ -1,0 +1,72 @@
+{% extends "checkout/details.html" %}
+
+{% load i18n %}
+{% load bootstrap_form from bootstrap4 %}
+
+{% block forms %}
+  <form method="post" novalidate class="checkout__shipping" id="shipping-form">
+    {% csrf_token %}
+    <h2>{% trans "Shipping address" context "Checkout shipping address title" %}</h2>
+
+    <div class="checkout__addresses{{ request.user.is_authenticated|yesno:",--full-width" }}">
+      {% if request.user.is_authenticated %}
+        {% include "checkout/snippets/addresses_form.html" with addresses_form=user_form addresses=additional_addresses address_form=address_form only %}
+      {% else %}
+        {% bootstrap_form user_form %}
+        {% include "account/snippets/address_form.html" with address_form=address_form only %}
+      {% endif %}
+    </div>
+    <div class="checkout__addresses">
+      <button type="submit" class="btn btn-primary" id="continue-button">
+            {% trans "Continue" context "Checkout shipping primary action" %}
+      </button>
+    </div>
+  </form>
+{% endblock %}
+<script>
+document.getElementById('shipping-form').addEventListener('submit', function(event) {
+  var selectedAddress = document.querySelector('.checkout__addresses-panel input[type="radio"]:checked');
+
+  // Nếu chọn địa chỉ đã lưu, bỏ qua kiểm tra form
+  if (selectedAddress && selectedAddress.value !== 'new_address') {
+    return; // Bỏ qua kiểm tra trường hợp đã chọn địa chỉ đã lưu
+  }
+
+  var requiredFields = document.querySelectorAll('.checkout__shipping [required]');
+  var allFilled = true;
+
+  // Kiểm tra các trường bắt buộc khi chọn địa chỉ mới
+  requiredFields.forEach(function(field) {
+    if (!field.value.trim()) {
+      allFilled = false;
+      field.classList.add('is-invalid');
+    } else {
+      field.classList.remove('is-invalid');
+    }
+  });
+
+  if (!allFilled) {
+    event.preventDefault();
+    alert('Please fill in all required fields marked with *.');
+  }
+});
+
+document.querySelectorAll('.checkout__addresses-panel input[type="radio"]').forEach(function(radio) {
+  radio.addEventListener('change', function() {
+    console.log('Radio button changed: ', radio.value);
+    // Hiển thị hoặc ẩn địa chỉ mới tùy vào lựa chọn
+    document.querySelectorAll('.checkout__new-address-container').forEach(function(container) {
+      container.style.display = radio.value === 'new_address' ? 'block' : 'none';
+    });
+  });
+});
+
+document.getElementById('continue-button').addEventListener('click', function(event) {
+  var selectedAddress = document.querySelector('.checkout__addresses-panel input[type="radio"]:checked');
+
+  // Nếu chọn địa chỉ đã lưu, bỏ qua kiểm tra và tiếp tục chuyển hướng
+  if (selectedAddress && selectedAddress.value !== 'new_address') {
+    document.getElementById('shipping-form').submit(); // Submit form khi chọn địa chỉ đã lưu
+  }
+});
+</script>

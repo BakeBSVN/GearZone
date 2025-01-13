@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Builder</title>
+</head>
+<body>
+    <h1>Product Builder</h1>
+    <form method="post">
+        {% csrf_token %}
+        {% for category, products in products_by_category.items %}
+            <label for="{{ category }}">{{ category }}</label>
+            <select name="{{ category }}" id="{{ category }}">
+                <option value="">Select a {{ category }}</option>
+                {% for product in products %}
+                    <option value="{{ product.id }}">{{ product.name }}</option>
+                {% endfor %}
+            </select>
+            <br>
+        {% endfor %}
+        <button type="submit">Build Product</button>
+    </form>
+
+    {% if selected_components %}
+        <h2>Selected Components</h2>
+        <ul>
+            {% for category, product in selected_components.items %}
+                <li>{{ category }}: {{ product.name }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+</body>
+</html>

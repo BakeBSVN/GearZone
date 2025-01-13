@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% load i18n %}
+{% load price from taxed_prices %}
+{% load static %}
+
+{% block title %}{% trans "Checkout" context "Checkout page title" %} — {{ block.super }}{% endblock %}
+
+{% block header %}
+  <div class="navbar__login container-fluid {% if user.is_impersonate %} bg-warning{% endif %}" >
+      <div class=" d-none d-md-block container">
+      <div class="row">
+        <div class="col-6">
+          <p class="text-left">{{ site.settings.translated.header_text }}</p>
+        </div>
+        <div class="col-6">
+          <ul class="float-right">
+            {% get_available_languages as LANGUAGES %}
+
+            {# We display language picker only if there're languages to pick from #}
+            {% if LANGUAGES|length > 1 %}
+              {% get_current_language as LANGUAGE_CODE %}
+              <li>
+                <div class="language-picker dropdown show">
+                  <a class="dropdown-toggle dropdown-link " id="language-picker-button">
+                    {{ LANGUAGE_CODE|language_name_local }}
+                  </a>
+                  {% include "_language_picker.html" %}
+                </div>
+              </li>
+            {% endif %}
+            {% if user.is_authenticated %}
+              {% if user.is_staff or request.impersonator.is_staff %}
+                <li>
+                  <a href="{% url "dashboard:index" %}" target="_blank" rel="noopener">
+                    {% trans "Dashboard" context "Main navigation item" %}
+                  </a>
+                </li>
+              {% endif %}
+              <li>
+                <a href="{% url "account:details" %}">
+                  {% trans "Your account" context "Main navigation item" %}</a>
+              </li>
+              {% if user.is_impersonate %}
+                <li>
+                  <a href="{% url "impersonate-stop" %}">
+                    {% trans 'Stop impersonating' context 'Main navigation item' %}
+                  </a>
+                </li>
+              {% else %}
+                <li>
+                  <a href="{% url "account:logout" %}">
+                    {% trans "Log out" context "Main navigation item" %}</a>
+                </li>
+              {% endif %}
+            {% else %}
+              <li>
+                <a rel="nofollow" href="{% url "account:signup" %}">
+                  {% trans "Register" context "Main navigation item" %}</a>
+              </li>
+              <li>
+                <a rel="nofollow" href="{% url "account:login" %}">
+                  {% trans "Log in" context "Main navigation item" %}
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </div>
+    </div>
+{#  <div class="container-fluid navbar__login">#}
+{#    <div class="container">#}
+{#      <p>{% trans "Easy and secure!" context "Checkout top message" %}</p>#}
+{#    </div>#}
+{#  </div>#}
+  <header class="checkout__header">
+    <div class="container">
+      <a href="{% url 'home'%}">
+        <svg data-src="{% static "images/logo_light.svg" %}" height="48px" width="176px" />
+      </a>
+      <h1>{% trans "Checkout" context "Checkout title" %}</h1>
+    </div>
+  </header>
+{% endblock %}
+
+{% block footer %}
+{% endblock %}
+
+{% block content %}
+  <div class="row checkout">
+    <div class="col-md-7">
+      {% block forms %}{% endblock %}
+    </div>
+    <div class="col-md-5">
+      <div class="checkout__review">
+        <h3 class="checkout__review__tittle">{% trans "Order review" context "Order review title" %}</h3>
+        {% for line, line_total in checkout_lines %}
+          <div class="row">
+            <div class="col-8">
+              <p><strong>{{ line.variant.product.translated }}</strong> x {{ line.quantity }}<br>
+                <span class="checkout__review__variant">{{ line.variant.translated }}</span></p>
+            </div>
+            <div class="col-4">
+              <p class="float-right">
+                {% price line_total %}
+              </p>
+            </div>
+          </div>
+        {% endfor %}
+        <div class="row checkout__review__section">
+          <div class="col-8">
+            <p>{% trans "Subtotal" context "Order review section" %}</p>
+          </div>
+          <div class="col-4">
+            <p class="float-right">
+              {% price checkout_subtotal %}
+            </p>
+          </div>
+        </div>
+        <div class="row checkout__review__section">
+          <div class="col-8">
+            <p>{% trans "Shipment" context "Order review section" %}</p>
+          </div>
+          <div class="col-4">
+            <p class="float-right">
+              {% if checkout.shipping_method %}
+                {% price checkout_shipping_price %}
+              {% else %}
+                &mdash;
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        {% if checkout_are_taxes_handled %}
+          <div class="row checkout__review__section">
+            <div class="col-8">
+              {% if site.settings.display_gross_prices %}
+                <p>{% trans "Taxes (included)" context "Order review section title" %}</p>
+              {% else %}
+                <p>{% trans "Taxes" context "Order review section title" %}</p>
+              {% endif %}
+            </div>
+            <div class="col-4">
+              <p class="float-right">{% price checkout_total.tax %}</p>
+            </div>
+          </div>
+        {% endif %}
+        <div class="row checkout__review__section">
+          <div class="col-12">
+            <h3>{% trans "Promo code" context "Order review section title" %}</h3>
+            {% include "checkout/snippets/voucher_form.html" with checkout=checkout form=voucher_form %}
+          </div>
+        </div>
+        <div class="row checkout__review__section">
+          <div class="col-8">
+            <h3>{% trans "Total" context "Order review section title" %}</h3>
+          </div>
+          <div class="col-4">
+            <h3 class="float-right">{% price checkout_total.gross %}</h3>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endblock content %}

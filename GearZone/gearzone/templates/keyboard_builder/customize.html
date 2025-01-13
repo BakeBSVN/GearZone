@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Customize Your Keyboard</title>
+    <script>
+        async function fetchProducts(category) {
+            const response = await fetch(`/keyboard_builder/products/?category=${category}`);
+            const products = await response.json();
+            return products;
+        }
+
+        async function loadProducts() {
+            const keycaps = await fetchProducts('keycap');
+            const switches = await fetchProducts('switch');
+            const kits = await fetchProducts('kit');
+
+            // Populate the UI with products
+            // Example: document.getElementById('keycaps').innerHTML = keycaps.map(product => `<div>${product.name} - ${product.price}</div>`).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</head>
+<body>
+    <h1>Customize Your Keyboard</h1>
+    <div>
+        <h2>Keycaps</h2>
+        <div id="keycaps"></div>
+    </div>
+    <div>
+        <h2>Switches</h2>
+        <div id="switches"></div>
+    </div>
+    <div>
+        <h2>Kits</h2>
+        <div id="kits"></div>
+    </div>
+    <div>
+        <h2>Total Cost: <span id="total-cost">0</span></h2>
+    </div>
+</body>
+</html>
